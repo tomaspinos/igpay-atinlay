@@ -48,6 +48,7 @@ class PigLatinTranslatorTest {
     void shouldTranslateComplexSentences() {
         assertAll(
                 () -> assertEquals("igpay-atinlay", translator.translate("pig-latin")),
+                () -> assertEquals("away   bay   cay", translator.translate(" a   b   c ")),
                 () -> assertEquals("Oneway wotay hr'eetay'.", translator.translate("One two 'three'.")),
                 () -> assertEquals("Callaway Entway Thataway.", translator.translate("Callaway Went Thataway.")),
                 () -> assertEquals("Hancellorcay Hilippay Ammondhay ashay aidsay ehay isway opt\"imisticway\"" +
@@ -61,7 +62,8 @@ class PigLatinTranslatorTest {
     void shouldTreatHyphensAsTwoWords() {
         assertAll(
                 () -> assertEquals("histay-hingtay", translator.translate("this-thing")),
-                () -> assertEquals("away-bay-cay-day", translator.translate("a-b-c-d"))
+                () -> assertEquals("away-bay-cay-day", translator.translate("a-b-c-d")),
+                () -> assertEquals("away---bay-cay--day", translator.translate("a---b-c--d"))
         );
     }
 
