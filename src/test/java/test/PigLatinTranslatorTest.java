@@ -1,69 +1,82 @@
 package test;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class PigLatinTranslatorTest {
+class PigLatinTranslatorTest {
 
     private PigLatinTranslator translator;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         translator = new PigLatinTranslator();
     }
 
     @Test
-    public void shouldHandleBlankInput() {
-        assertThat(translator.translate("  "), is(""));
+    void shouldHandleBlankInput() {
+        assertEquals("", translator.translate("  "));
     }
 
     @Test
-    public void shouldHandleNullInput() {
-        assertThat(translator.translate(null), is(nullValue()));
+    void shouldHandleNullInput() {
+        assertNull(translator.translate(null));
     }
 
     @Test
-    public void shouldKeepCapitalizationInSamePlace() {
-        assertThat(translator.translate("Beach"), is("Eachbay"));
-        assertThat(translator.translate("McCloud"), is("CcLoudmay"));
+    void shouldKeepCapitalizationInSamePlace() {
+        assertAll(
+                () -> assertEquals("Eachbay", translator.translate("Beach")),
+                () -> assertEquals("CcLoudmay", translator.translate("McCloud"))
+        );
     }
 
     @Test
-    public void shouldKeepPunctuationInPlace() {
-        assertThat(translator.translate("can't"), is("antca'y"));
-        assertThat(translator.translate("end."), is("endway."));
-        assertThat(translator.translate("\"end\"."), is("end\"way\"."));
-        assertThat(translator.translate("a'b'c'd"), is("abcd'w'a'y"));
+    void shouldKeepPunctuationInPlace() {
+        assertAll(
+                () -> assertEquals("antca'y", translator.translate("can't")),
+                () -> assertEquals("endway.", translator.translate("end.")),
+                () -> assertEquals("end\"way\".", translator.translate("\"end\".")),
+                () -> assertEquals("abcd'w'a'y", translator.translate("a'b'c'd"))
+        );
     }
 
     @Test
-    public void shouldTranslateComplexSentences() {
-        assertThat(translator.translate("pig-latin"), is("igpay-atinlay"));
-        assertThat(translator.translate("One two 'three'."), is("Oneway wotay hr'eetay'."));
+    void shouldTranslateComplexSentences() {
+        assertAll(
+                () -> assertEquals("igpay-atinlay", translator.translate("pig-latin")),
+                () -> assertEquals("Oneway wotay hr'eetay'.", translator.translate("One two 'three'.")),
+                () -> assertEquals("Callaway Entway Thataway.", translator.translate("Callaway Went Thataway.")),
+                () -> assertEquals("Hancellorcay Hilippay Ammondhay ashay aidsay ehay isway opt\"imisticway\"" +
+                                " Rexitbay iscussionsday etweenbay hetay overnmentgay andway Abourlay ancay eachray om\"esay ormfay ofway agreementway\".",
+                        translator.translate("Chancellor Philip Hammond has said he is \"optimistic\"" +
+                                " Brexit discussions between the government and Labour can reach \"some form of agreement\"."))
+        );
     }
 
     @Test
-    public void shouldTreatHyphensAsTwoWords() {
-        assertThat(translator.translate("this-thing"), is("histay-hingtay"));
-        assertThat(translator.translate("a-b-c-d"), is("away-bay-cay-day"));
+    void shouldTreatHyphensAsTwoWords() {
+        assertAll(
+                () -> assertEquals("histay-hingtay", translator.translate("this-thing")),
+                () -> assertEquals("away-bay-cay-day", translator.translate("a-b-c-d"))
+        );
     }
 
     @Test
-    public void testConsonantAndAyRule() {
-        assertThat(translator.translate("Hello"), is("Ellohay"));
+    void testConsonantAndAyRule() {
+        assertEquals("Ellohay", translator.translate("Hello"));
     }
 
     @Test
-    public void testEndsInWayRule() {
-        assertThat(translator.translate("stairway"), is("stairway"));
+    void testEndsInWayRule() {
+        assertEquals("stairway", translator.translate("stairway"));
     }
 
     @Test
-    public void testVowelAndWayRule() {
-        assertThat(translator.translate("apple"), is("appleway"));
+    void testVowelAndWayRule() {
+        assertEquals("appleway", translator.translate("apple"));
     }
 }
