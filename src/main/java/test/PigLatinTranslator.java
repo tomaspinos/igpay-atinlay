@@ -91,8 +91,8 @@ public class PigLatinTranslator {
      * <li>Punctuation must remain in the same relative place from the end of the word.</li>
      * </ul>
      */
-    private String applyUpperCaseAndPunctuationCharRules(String word, List<Integer> upperCaseCharIndexes, List<Punctuation> punctuations) {
-        List<Character> chars = new ArrayList<>();
+    private String applyUpperCaseAndPunctuationRules(String word, List<Integer> upperCaseCharIndexes, List<Punctuation> punctuations) {
+        List<Character> chars = new ArrayList<>(word.length() + punctuations.size());
         for (char ch : word.toCharArray()) {
             chars.add(ch);
         }
@@ -115,25 +115,11 @@ public class PigLatinTranslator {
     }
 
     /**
-     * Returns indexes of upper case characters.
+     * Gets upper case character indexes and removes punctuation.
      */
-    private List<Integer> getUpperCaseCharIndexes(String word) {
-        List<Integer> upperCaseIndexes = new ArrayList<>();
-
-        for (int i = 0; i < word.length(); i++) {
-            if (Character.isUpperCase(word.charAt(i))) {
-                upperCaseIndexes.add(i);
-            }
-        }
-
-        return upperCaseIndexes;
-    }
-
-    /**
-     * Removes punctuation and returns the removal result - what was left from the word + punctuation characters.
-     */
-    private PunctuationRemovalResult removePunctuation(String word) {
+    private UpperCaseAndPunctuation getUpperCaseIndexesAndPunctuation(String word) {
         StringBuilder resultingWordBuilder = new StringBuilder();
+        List<Integer> upperCaseIndexes = new ArrayList<>();
         List<Punctuation> punctuations = new ArrayList<>();
 
         for (int i = 0; i < word.length(); i++) {
@@ -141,11 +127,14 @@ public class PigLatinTranslator {
             if (isPunctuation(ch)) {
                 punctuations.add(new Punctuation(word.length() - i - 1, ch));
             } else {
-                resultingWordBuilder.append(ch);
+                if (Character.isUpperCase(word.charAt(i))) {
+                    upperCaseIndexes.add(i - punctuations.size());
+                }
+                resultingWordBuilder.append(Character.toLowerCase(ch));
             }
         }
 
-        return new PunctuationRemovalResult(resultingWordBuilder.toString(), punctuations);
+        return new UpperCaseAndPunctuation(resultingWordBuilder.toString(), upperCaseIndexes, punctuations);
     }
 
     /**
@@ -169,31 +158,29 @@ public class PigLatinTranslator {
             return translateWord(word.substring(0, hyphenIndex)) + "-" + translateWord(word.substring(hyphenIndex + 1));
         }
 
-        PunctuationRemovalResult punctuationRemovalResult = removePunctuation(word);
+        UpperCaseAndPunctuation upperCaseAndPunctuation = getUpperCaseIndexesAndPunctuation(word);
 
-        List<Integer> upperCaseCharIndexes = getUpperCaseCharIndexes(punctuationRemovalResult.getWord());
-
-        String wordInLowerCase = punctuationRemovalResult.getWord().toLowerCase();
+        String wordInLowerCaseWithoutPunctuation = upperCaseAndPunctuation.getWordInLowerCaseWithoutPunctuation();
 
         String processedWord;
 
         // Words that end in “way” are not modified
-        if (wordInLowerCase.endsWith("way")) {
-            processedWord = wordInLowerCase;
+        if (wordInLowerCaseWithoutPunctuation.endsWith("way")) {
+            processedWord = wordInLowerCaseWithoutPunctuation;
         } else {
-            char firstCharacter = wordInLowerCase.charAt(0);
+            char firstCharacter = wordInLowerCaseWithoutPunctuation.charAt(0);
             if (isVowel(firstCharacter)) {
                 // Words that start with a vowel have the letters “way” added to the end
-                processedWord = wordInLowerCase + "way";
+                processedWord = wordInLowerCaseWithoutPunctuation + "way";
             } else {
                 // First character is neither a punctuation nor a vowel - we treat it as a consonant
                 // Words that start with a consonant have their first letter moved to the end of the word
                 // and the letters “ay” added to the end
-                processedWord = wordInLowerCase.substring(1) + firstCharacter + "ay";
+                processedWord = wordInLowerCaseWithoutPunctuation.substring(1) + firstCharacter + "ay";
             }
         }
 
-        return applyUpperCaseAndPunctuationCharRules(processedWord, upperCaseCharIndexes, punctuationRemovalResult.getPunctuations());
+        return applyUpperCaseAndPunctuationRules(processedWord, upperCaseAndPunctuation.getUpperCaseIndexes(), upperCaseAndPunctuation.getPunctuations());
     }
 
     /**
@@ -242,21 +229,26 @@ public class PigLatinTranslator {
     }
 
     /**
-     * Result of punctuation removal - word with punctuations removed + list of punctuations.
+     * Word in lower case with punctuations removed + list of punctuations + list of upper case character indexes.
      */
-    private static class PunctuationRemovalResult {
+    private static class UpperCaseAndPunctuation {
 
         /**
-         * Word with the punctuations removed.
+         * Word in lowe case with the punctuations removed.
          */
-        private final String word;
+        private final String wordInLowerCaseWithoutPunctuation;
+        /**
+         * Indexes of upper case characters.
+         */
+        private final List<Integer> upperCaseIndexes;
         /**
          * List of the removed punctuations (ordered by their index from 0 upwards).
          */
         private final List<Punctuation> punctuations;
 
-        private PunctuationRemovalResult(String word, List<Punctuation> punctuations) {
-            this.word = word;
+        private UpperCaseAndPunctuation(String wordInLowerCaseWithoutPunctuation, List<Integer> upperCaseIndexes, List<Punctuation> punctuations) {
+            this.wordInLowerCaseWithoutPunctuation = wordInLowerCaseWithoutPunctuation;
+            this.upperCaseIndexes = upperCaseIndexes;
             this.punctuations = punctuations;
         }
 
@@ -264,8 +256,12 @@ public class PigLatinTranslator {
             return punctuations;
         }
 
-        private String getWord() {
-            return word;
+        private List<Integer> getUpperCaseIndexes() {
+            return upperCaseIndexes;
+        }
+
+        private String getWordInLowerCaseWithoutPunctuation() {
+            return wordInLowerCaseWithoutPunctuation;
         }
     }
 }

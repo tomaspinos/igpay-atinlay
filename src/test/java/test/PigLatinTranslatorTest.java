@@ -40,7 +40,7 @@ class PigLatinTranslatorTest {
                 () -> assertEquals("antca'y", translator.translate("can't")),
                 () -> assertEquals("endway.", translator.translate("end.")),
                 () -> assertEquals("end\"way\".", translator.translate("\"end\".")),
-                () -> assertEquals("abcd'w'a'y", translator.translate("a'b'c'd"))
+                () -> assertEquals("AabBC'cd'Dw'ay", translator.translate("Aa'bB'Cc'dD"))
         );
     }
 
